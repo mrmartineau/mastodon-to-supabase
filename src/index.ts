@@ -43,6 +43,7 @@ export default {
     return new Response('Success!', { status: 200 })
   },
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    console.log(`🚀 ~ scheduled run`, event.scheduledTime)
     const myToots = await getMyToots(env)
     await upsertToots(env, myToots)
     const faves = await getFaves(env)
@@ -63,7 +64,6 @@ const getFaves = async (env: Env) => {
   )
 
   const faves = await favesResponse.json<any[]>()
-  console.log(`🚀 ~ getFaves ~ faves:`, faves)
 
   if (!faves?.length) {
     throw new Error('No faves')
