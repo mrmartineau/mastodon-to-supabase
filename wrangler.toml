@@ -2,6 +2,12 @@ name = "masto-to-otter"
 main = "src/index.ts"
 compatibility_date = "2023-10-02"
 
+[triggers]
+crons = ["0 */2 * * *"]
+
+[env.dev.triggers]
+crons = ["*/1 * * * *"]
+
 # Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)
 # Note: Use secrets to store sensitive data.
 # Docs: https://developers.cloudflare.com/workers/platform/environment-variables

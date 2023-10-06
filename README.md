@@ -24,7 +24,8 @@ create table
     reply json null,
     hashtags text[] null,
     liked_toot boolean not null default false,
-    constraint toots_pkey primary key (id)
+    constraint toots_pkey primary key (id),
+    constraint toots_toot_id_key unique (toot_id)
   ) tablespace pg_default;
 ```
 
@@ -36,9 +37,9 @@ This worker is setup to be scheduled via a CRON job. It is up to you how often i
 
 You will need to set the following environment variables in your Cloudflare worker:
 
-```
-TOOT_API_STATUSES_ENDPOINT=https://{your-instance.com}/api/v1/accounts/{your-mastodon-user-id}/statuses
-TOOT_API_FAVE_ENDPOINT=https://{your-instance.com}/api/v1/favourites
+```sh
+MASTODON_INSTANCE=your-instance.com # e.g. mastodon.social or toot.cafe
+MASTODON_ID=your-mastodon-user-id # not username, it is a number
 TOOT_API_TOKEN=your-mastodon-api-token
 SUPABASE_URL=your-project-url
 SUPABASE_KEY=your-service-key

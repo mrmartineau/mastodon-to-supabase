@@ -2,27 +2,29 @@ import { createClient } from '@supabase/supabase-js'
 import * as linkify from 'linkifyjs'
 import { type Toot } from './toot.types'
 import html2md from 'html-to-md'
+import urlJoin from 'proper-url-join'
 
 export interface Env {
   SUPABASE_URL: string
   SUPABASE_KEY: string
   TOOT_API_TOKEN: string
-  TOOT_API_FAVE_ENDPOINT: string
-  TOOT_API_STATUSES_ENDPOINT: string
+  MASTODON_INSTANCE: string
+  MASTODON_ID: string
 }
 
-const createTootEntryFactory = (toot: Toot, isLiked: boolean) => {
-  console.log(`🚀 ~ createTootEntryFactory ~ toot:`, toot)
+const createTootEntryFactory = (toot: Toot, isLiked: boolean, env: Env) => {
   const content = toot.content
   return {
     liked_toot: isLiked,
     text: html2md(content),
     urls: linkify.find(content) ?? [],
     toot_id: toot.id,
-    user_id: toot.account.acct,
+    user_id: toot.account.acct.includes('@')
+      ? toot.account.acct
+      : `toot.account.acct@${env.MASTODON_INSTANCE}`,
     user_name: toot.account.display_name,
     user_avatar: toot.account.avatar,
-    toot_url: toot?.url,
+    toot_url: toot.url,
     media: toot.media_attachments,
     hashtags: toot.tags.map((item) => {
       return item.name
@@ -35,23 +37,28 @@ const createTootEntryFactory = (toot: Toot, isLiked: boolean) => {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
     const myToots = await getMyToots(env)
-    return new Response(JSON.stringify(myToots), { status: 200 })
+    const faves = await getFaves(env)
+    await upsertToots(env, myToots)
+    await upsertToots(env, faves)
+    return new Response('Success!', { status: 200 })
   },
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     const myToots = await getMyToots(env)
     const faves = await getFaves(env)
     await upsertToots(env, myToots)
-    // await upsertToots(env, faves)
     ctx.waitUntil(upsertToots(env, faves))
   },
 }
 
 const getFaves = async (env: Env) => {
-  const favesResponse = await fetch(env.TOOT_API_FAVE_ENDPOINT, {
-    headers: {
-      Authorization: `Bearer ${env.TOOT_API_TOKEN}`,
-    },
-  })
+  const favesResponse = await fetch(
+    urlJoin('https://', env.MASTODON_INSTANCE, '/api/v1/favourites'),
+    {
+      headers: {
+        Authorization: `Bearer ${env.TOOT_API_TOKEN}`,
+      },
+    }
+  )
 
   const faves = await favesResponse.json<any[]>()
 
@@ -60,7 +67,7 @@ const getFaves = async (env: Env) => {
   }
 
   const transformedFaves = faves.map((toot: Toot) => {
-    return createTootEntryFactory(toot, true)
+    return createTootEntryFactory(toot, true, env)
   })
 
   return transformedFaves
@@ -71,21 +78,32 @@ const upsertToots = async (
   toots: ReturnType<typeof createTootEntryFactory>[]
 ) => {
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_KEY)
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('toots')
     .upsert(toots, { onConflict: 'toot_id' })
 
   if (error) {
     throw error
   }
+
+  console.log('Upsert successful')
 }
 
 const getMyToots = async (env: Env) => {
-  const myTootsResponse = await fetch(env.TOOT_API_STATUSES_ENDPOINT, {
-    headers: {
-      Authorization: `Bearer ${env.TOOT_API_TOKEN}`,
-    },
-  })
+  const myTootsResponse = await fetch(
+    urlJoin(
+      'https://',
+      env.MASTODON_INSTANCE,
+      '/api/v1/accounts',
+      env.MASTODON_ID,
+      'statuses'
+    ),
+    {
+      headers: {
+        Authorization: `Bearer ${env.TOOT_API_TOKEN}`,
+      },
+    }
+  )
 
   const myToots = await myTootsResponse.json<any[]>()
 
@@ -98,7 +116,7 @@ const getMyToots = async (env: Env) => {
       return toot.content.length !== 0
     })
     .map((toot: Toot) => {
-      return createTootEntryFactory(toot, false)
+      return createTootEntryFactory(toot, false, env)
     })
 
   return transformedToots || []
