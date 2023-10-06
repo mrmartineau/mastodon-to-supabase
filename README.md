@@ -1,6 +1,6 @@
 # Cloudflare worker to backup your Mastodon toots and favourites to Supabase
 
-This is a Cloudflare worker that will backup your Mastodon toots and favourites to a Supabase database. It is designed to be run on a schedule, and will only save new items since the last time it was run (using Supabase's upsert functionality).
+This is a Cloudflare worker that will backup your Mastodon toots and favourites to a Supabase database. It is designed to be run on a schedule, and will only save new items since the last time it was run (using Supabase's `upsert` functionality).
 
 ## Setup
 
@@ -37,6 +37,7 @@ This worker is setup to be scheduled via a CRON job. It is up to you how often i
 You will need to set the following environment variables in your Cloudflare worker:
 
 ```
+TOOT_API_STATUSES_ENDPOINT=https://{your-instance.com}/api/v1/accounts/{your-mastodon-user-id}/statuses
 TOOT_API_FAVE_ENDPOINT=https://{your-instance.com}/api/v1/favourites
 TOOT_API_TOKEN=your-mastodon-api-token
 SUPABASE_URL=your-project-url
@@ -48,3 +49,11 @@ For local development, add them to a `.dev.vars` file in the root of the project
 ### Mastodon
 
 Create a new application in your Mastodon instance. Go to `/settings/applications` in your instance. It will need `read` access to your toots.
+
+---
+
+## License
+
+[MIT](https://choosealicense.com/licenses/mit/) © [Zander Martineau](https://zander.wtf)
+
+> Made by Zander • [zander.wtf](https://zander.wtf) • [GitHub](https://github.com/mrmartineau/) • [Mastodon](https://main.elk.zone/toot.cafe/@zander)
