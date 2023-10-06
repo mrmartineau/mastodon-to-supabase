@@ -1,4 +1,4 @@
-name = "masto-faves-to-otter"
+name = "masto-to-otter"
 main = "src/index.ts"
 compatibility_date = "2023-10-02"
 
