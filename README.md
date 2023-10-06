@@ -40,7 +40,7 @@ You will need to set the following environment variables in your Cloudflare work
 ```sh
 MASTODON_INSTANCE=your-instance.com # e.g. mastodon.social or toot.cafe
 MASTODON_ID=your-mastodon-user-id # not username, it is a number
-TOOT_API_TOKEN=your-mastodon-api-token
+MASTODON_APP_API_TOKEN=your-mastodon-app-api-token
 SUPABASE_URL=your-project-url
 SUPABASE_KEY=your-service-key
 ```

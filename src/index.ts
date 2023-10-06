@@ -7,7 +7,7 @@ import urlJoin from 'proper-url-join'
 export interface Env {
   SUPABASE_URL: string
   SUPABASE_KEY: string
-  TOOT_API_TOKEN: string
+  MASTODON_APP_API_TOKEN: string
   MASTODON_INSTANCE: string
   MASTODON_ID: string
 }
@@ -21,7 +21,7 @@ const createTootEntryFactory = (toot: Toot, isLiked: boolean, env: Env) => {
     toot_id: toot.id,
     user_id: toot.account.acct.includes('@')
       ? toot.account.acct
-      : `toot.account.acct@${env.MASTODON_INSTANCE}`,
+      : `${toot.account.acct}@${env.MASTODON_INSTANCE}`,
     user_name: toot.account.display_name,
     user_avatar: toot.account.avatar,
     toot_url: toot.url,
@@ -37,30 +37,33 @@ const createTootEntryFactory = (toot: Toot, isLiked: boolean, env: Env) => {
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
     const myToots = await getMyToots(env)
-    const faves = await getFaves(env)
     await upsertToots(env, myToots)
+    const faves = await getFaves(env)
     await upsertToots(env, faves)
     return new Response('Success!', { status: 200 })
   },
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     const myToots = await getMyToots(env)
-    const faves = await getFaves(env)
     await upsertToots(env, myToots)
+    const faves = await getFaves(env)
     ctx.waitUntil(upsertToots(env, faves))
   },
 }
 
 const getFaves = async (env: Env) => {
   const favesResponse = await fetch(
-    urlJoin('https://', env.MASTODON_INSTANCE, '/api/v1/favourites'),
+    urlJoin(`https://${env.MASTODON_INSTANCE}`, '/api/v1/favourites', {
+      leadingSlash: 'keep',
+    }),
     {
       headers: {
-        Authorization: `Bearer ${env.TOOT_API_TOKEN}`,
+        Authorization: `Bearer ${env.MASTODON_APP_API_TOKEN}`,
       },
     }
   )
 
   const faves = await favesResponse.json<any[]>()
+  console.log(`🚀 ~ getFaves ~ faves:`, faves)
 
   if (!faves?.length) {
     throw new Error('No faves')
@@ -92,15 +95,15 @@ const upsertToots = async (
 const getMyToots = async (env: Env) => {
   const myTootsResponse = await fetch(
     urlJoin(
-      'https://',
-      env.MASTODON_INSTANCE,
+      `https://${env.MASTODON_INSTANCE}`,
       '/api/v1/accounts',
       env.MASTODON_ID,
-      'statuses'
+      'statuses',
+      { leadingSlash: 'keep' }
     ),
     {
       headers: {
-        Authorization: `Bearer ${env.TOOT_API_TOKEN}`,
+        Authorization: `Bearer ${env.MASTODON_APP_API_TOKEN}`,
       },
     }
   )
