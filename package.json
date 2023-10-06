@@ -1,14 +1,24 @@
 {
-  "name": "masto-faves-to-otter",
-  "version": "0.0.0",
+  "name": "mastodon-to-otter",
+  "version": "1.0.0",
+  "author": {
+    "name": "Zander Martineau",
+    "url": "https://zander.wtf"
+  },
   "private": true,
   "scripts": {
     "deploy": "wrangler deploy",
+    "dev": "wrangler dev --test-scheduled",
     "start": "wrangler dev"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230419.0",
     "typescript": "^5.0.4",
     "wrangler": "^3.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0",
+    "html-to-md": "^0.8.3",
+    "linkifyjs": "^4.1.1"
   }
 }
