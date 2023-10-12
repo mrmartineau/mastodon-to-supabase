@@ -10,6 +10,7 @@ export interface Env {
   MASTODON_APP_API_TOKEN: string
   MASTODON_INSTANCE: string
   MASTODON_ID: string
+  SUPABASE_USER_ID?: string
 }
 
 const createTootEntryFactory = (toot: Toot, isLiked: boolean, env: Env) => {
@@ -31,6 +32,7 @@ const createTootEntryFactory = (toot: Toot, isLiked: boolean, env: Env) => {
     }),
     reply: null,
     created_at: new Date(toot.created_at),
+    db_user_id: env.SUPABASE_USER_ID || '',
   }
 }
 
@@ -53,9 +55,7 @@ export default {
 
 const getFaves = async (env: Env) => {
   const favesResponse = await fetch(
-    urlJoin(`https://${env.MASTODON_INSTANCE}`, '/api/v1/favourites', {
-      leadingSlash: 'keep',
-    }),
+    `https://${env.MASTODON_INSTANCE}/api/v1/favourites`,
     {
       headers: {
         Authorization: `Bearer ${env.MASTODON_APP_API_TOKEN}`,

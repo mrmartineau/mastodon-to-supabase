@@ -43,7 +43,10 @@ MASTODON_ID=your-mastodon-user-id # not username, it is a number
 MASTODON_APP_API_TOKEN=your-mastodon-app-api-token
 SUPABASE_URL=your-project-url
 SUPABASE_KEY=your-service-key
+SUPABASE_USER_ID=your-supabase-user-id # optional
 ```
+
+To find your Mastodon id, you can use [this tool](https://mastodon-userid-lookup.jcxldn.net/).
 
 For local development, add them to a `.dev.vars` file in the root of the project
 
